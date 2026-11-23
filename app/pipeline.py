@@ -3,6 +3,7 @@ from .modules.clock.service import validate
 from .modules.edits.contract import timeline
 from .modules.edits.mapping import map_cues
 from .modules.overlaps.service import locate
+from .modules.dwell.service import assess
 from .modules.balance.service import balance
 
 
@@ -19,8 +20,11 @@ def inspect(material, until=None):
     clashes = locate(cuts['rows'])
     if until == 'overlaps':
         return clashes
+    dwell = assess(cuts['rows'], cuts['cuts'])
+    if until == 'dwell':
+        return dwell
     check = balance(timing['rows'], cuts['rows'], clashes['counts']['overlap_frames'],
                     len(source['isolated']) + len(timing['isolated']))
     if until == 'balance':
         return check
-    return dict(source=source, clock=timing, edits=cuts, overlaps=clashes, balance=check)
+    return dict(source=source, clock=timing, edits=cuts, overlaps=clashes, dwell=dwell, balance=check)

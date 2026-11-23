@@ -7,6 +7,7 @@
 {% for field, label in [('original','原覆盖'),('delivered','交付'),('removed','剪辑移除'),('pending','缺段待证'),('overlap_target_frames','目标重叠')] %}<div><b>{{ totals[field] }}</b><span>{{ label }} <small>{{ '目标帧' if loop.last else '源帧' }}</small></span></div>{% endfor %}
 </div><div class="formula"><span class="square">ƒx</span><span id="focused-cell" role="status">归档号 {{ manifest.id[:14] if manifest else '样例预览' }}</span></div></section>
 <section class="panel grid-panel"><div class="sheet-bar"><h2>{{ tabs[sheet] }}</h2><div class="sheet-tools"><span>{{ rows|length }} 行证据</span>
+{% if verdict %}<span class="verdict">{{ verdict }}</span>{% endif %}
 {% if sheet=='runs' and manifest %}<button id="repeat" data-id="{{ manifest.id }}">复算该版</button>{% endif %}
 {% if sheet=='delivery' and manifest %}<a href="{{ url_for('delivery.export',key=manifest.id) }}">下载交付证据</a>{% endif %}</div></div>
 {% include 'grid.html' %}

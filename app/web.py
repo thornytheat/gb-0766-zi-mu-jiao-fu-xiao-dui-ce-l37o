@@ -9,7 +9,8 @@ from .problems import Rejection
 
 sheets = Blueprint('sheets', __name__)
 TABS = {'source': '文件采信', 'clock': '帧率校核', 'edits': '切版映射', 'overlaps': '冲突定位',
-        'balance': '覆盖对账', 'runs': '版本归档', 'delivery': '交付签发'}
+        'dwell': '停留校核', 'balance': '覆盖对账', 'runs': '版本归档', 'delivery': '交付签发'}
+STAGES = ('source', 'clock', 'edits', 'overlaps', 'dwell', 'balance')
 
 
 def current():
@@ -23,7 +24,7 @@ def current():
 
 @sheets.get('/api/check/<sheet>')
 def data(sheet):
-    if sheet not in tuple(TABS)[:5]:
+    if sheet not in STAGES:
         raise Rejection('NO_SHEET', '未找到校对页', 404)
     key = request.args.get('run')
     if key:
@@ -33,7 +34,7 @@ def data(sheet):
 
 @sheets.post('/api/check/<sheet>')
 def check_originals(sheet):
-    if sheet not in tuple(TABS)[:5]:
+    if sheet not in STAGES:
         raise Rejection('NO_SHEET', '未找到校对页', 404)
     return jsonify(inspect(material(request.get_json(silent=True)), until=sheet))
 
@@ -44,8 +45,14 @@ def grid(sheet):
     if sheet not in TABS:
         raise Rejection('NO_SHEET', '未找到校对页', 404)
     stages, manifest, sample = current()
+    verdict = None
     if sheet == 'delivery' and manifest:
-        verify(archive().read(manifest['id']))
+        try:
+            verify(archive().read(manifest['id']))
+            verdict = '停留与覆盖勾稽均通过，证据可签发'
+        except Rejection as error:
+            verdict = f'不予签发：{error}'
     return render_template('workbook.html', sheet=sheet, tabs=TABS, sample=sample, manifest=manifest,
-                           totals=stages['balance']['counts'], rows=cells(stages, sheet, archive(), manifest),
+                           verdict=verdict, totals=stages['balance']['counts'],
+                           rows=cells(stages, sheet, archive(), manifest),
                            columns=HEADERS[sheet], labels=LABELS, codes=CODES)
